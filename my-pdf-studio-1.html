@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My PDF Studio — Tools</title>
+<style>
+:root{--ink:#172033;--muted:#65718a;--brand:#4f46e5;--line:#e5e9f2;--bg:#f5f7fc}
+*{box-sizing:border-box}body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(120deg,#312e81,#4f46e5,#0891b2);color:white;padding:28px 18px}
+.wrap{max-width:1000px;margin:auto}h1{margin:0;font-size:clamp(25px,5vw,38px)}header p{margin:6px 0 0;color:#e0e7ff}
+main{padding:18px;max-width:1000px;margin:auto}.notice{background:#fff7d6;border:1px solid #f3d878;border-radius:12px;padding:12px 14px;margin-bottom:18px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 5px 18px #18244a0a}
+h2{font-size:19px;margin:0 0 8px}.desc{font-size:14px;color:var(--muted);margin:0 0 14px}
+label{display:block;font-weight:650;font-size:14px;margin:10px 0 5px}input[type=file],input[type=password],select{width:100%;padding:10px;border:1px solid #cbd3e2;border-radius:9px;background:white}
+button,.btn{display:inline-block;border:0;border-radius:10px;background:var(--brand);color:white;padding:11px 14px;font-weight:700;cursor:pointer;margin-top:12px;text-decoration:none}
+button.secondary{background:#e8eafc;color:#302e81}button:disabled{opacity:.5;cursor:not-allowed}.status{font-size:14px;margin-top:10px;white-space:pre-wrap;color:#334155}
+video{width:100%;background:#111;border-radius:10px;margin-top:8px;max-height:250px}canvas{max-width:100%;height:auto}.row{display:flex;gap:8px;flex-wrap:wrap}.small{font-size:12px;color:var(--muted)}footer{text-align:center;color:var(--muted);font-size:13px;padding:25px}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>📄 My PDF Studio</h1><p>PDF • JPG • QR Scan • Print — quick tools for your phone</p></div></header>
+<main>
+<div class="notice"><b>Privacy first:</b> Files are processed in this browser where supported. Avoid uploading Aadhaar to unknown websites. This page does not send files to a server. PDF password removal is only for files you are authorized to access; encrypted-PDF support varies by browser library.</div>
+<div class="grid">
+<section class="card">
+<h2>🪪 Aadhaar Front + Back → JPG</h2><p class="desc">Choose front and back photos and combine them into one JPG.</p>
+<label>Front side image</label><input id="front" type="file" accept="image/*">
+<label>Back side image</label><input id="back" type="file" accept="image/*">
+<label>Layout</label><select id="layout"><option value="vertical">Vertical (front above back)</option><option value="horizontal">Horizontal (side by side)</option></select>
+<button id="mergeJpg">Create combined JPG</button><div id="jpgStatus" class="status"></div><canvas id="jpgCanvas" hidden></canvas><a id="jpgDownload" class="btn" hidden download="aadhaar-front-back.jpg">Download JPG</a>
+</section>
+<section class="card">
+<h2>🖼️ Images → PDF</h2><p class="desc">Turn one or more photos into a PDF for printing or sharing.</p>
+<label>Select images</label><input id="imagesPdf" type="file" accept="image/*" multiple>
+<button id="makePdf">Create PDF</button><div id="imagePdfStatus" class="status"></div>
+</section>
+<section class="card">
+<h2>📚 Merge PDF files</h2><p class="desc">Combine multiple unencrypted PDFs into one PDF.</p>
+<label>Select PDFs (2 or more)</label><input id="pdfs" type="file" accept="application/pdf,.pdf" multiple>
+<button id="mergePdf">Merge PDFs</button><div id="mergeStatus" class="status"></div>
+</section>
+<section class="card">
+<h2>🔐 PDF Unlock (authorized files)</h2><p class="desc">Enter the correct password. Browser-only support depends on the PDF format; this demo will not bypass unknown passwords.</p>
+<label>Password</label><input id="pdfPassword" type="password" autocomplete="off" placeholder="Enter known PDF password">
+<label>Encrypted PDF</label><input id="lockedPdf" type="file" accept="application/pdf,.pdf">
+<button id="unlockPdf">Try to open / unlock</button><div id="unlockStatus" class="status"></div>
+<p class="small">If this tool reports that encryption is unsupported, use the PDF creator's official export/remove-password option after opening it with the correct password.</p>
+</section>
+<section class="card">
+<h2>🔎 QR Code Scanner</h2><p class="desc">Scan a QR code with your camera, or select a picture containing a QR code.</p>
+<div class="row"><button id="startCamera">Start camera</button><button id="stopCamera" class="secondary">Stop camera</button></div>
+<video id="video" playsinline muted></video>
+<label>Or choose QR image</label><input id="qrImage" type="file" accept="image/*">
+<canvas id="qrCanvas" hidden></canvas><div id="qrStatus" class="status"></div>
+</section>
+<section class="card">
+<h2>🖨️ Print / QR print helper</h2><p class="desc">Select a PDF or image, preview it, then open your device's print dialog. Scan a QR above to open its link if trusted.</p>
+<label>Select file to print</label><input id="printFile" type="file" accept="application/pdf,image/*">
+<label>Paper size</label><select id="paper"><option>A4</option><option>Letter</option><option>Legal</option></select>
+<button id="printBtn">Open print preview</button><div id="printStatus" class="status"></div>
+<div id="preview"></div>
+</section>
+</div>
+</main><footer>My PDF Studio • Local browser tools • Check the preview before printing</footer>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+function status(id,msg){$(id).textContent=msg}
+function downloadBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000)}
+function loadImage(file){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=URL.createObjectURL(file)})}
+$('mergeJpg').onclick=async()=>{try{const f=$('front').files[0],b=$('back').files[0];if(!f||!b)throw Error('Please choose both front and back images.');const [a,c]=await Promise.all([loadImage(f),loadImage(b)]);const vertical=$('layout').value==='vertical';const maxW=1600;let w1=Math.min(a.width,maxW),h1=a.height*w1/a.width,w2=Math.min(c.width,maxW),h2=c.height*w2/c.width;const gap=30,cv=$('jpgCanvas');cv.width=vertical?Math.max(w1,w2):w1+w2+gap;cv.height=vertical?h1+h2+gap:Math.max(h1,h2);const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);ctx.drawImage(a,0,0,w1,h1);ctx.drawImage(c,vertical?0: w1+gap,vertical?h1+gap:0,w2,h2);cv.hidden=false;cv.toBlob(blob=>{const url=URL.createObjectURL(blob);$('jpgDownload').href=url;$('jpgDownload').hidden=false;status('jpgStatus','Combined JPG ready.');},'image/jpeg',.92)}catch(e){status('jpgStatus',e.message||'Could not create JPG.')}};
+$('makePdf').onclick=async()=>{try{const files=[...$('imagesPdf').files];if(!files.length)throw Error('Choose at least one image.');const {jsPDF}=window.jspdf;const doc=new jsPDF();for(let i=0;i<files.length;i++){const im=await loadImage(files[i]);if(i)doc.addPage();const pageW=doc.internal.pageSize.getWidth(),pageH=doc.internal.pageSize.getHeight(),scale=Math.min((pageW-20)/im.width,(pageH-20)/im.height);doc.addImage(im,'JPEG',(pageW-im.width*scale)/2,(pageH-im.height*scale)/2,im.width*scale,im.height*scale)}doc.save('images.pdf');status('imagePdfStatus','PDF created.')}catch(e){status('imagePdfStatus',e.message||'Could not create PDF.')}};
+$('mergePdf').onclick=async()=>{try{const files=[...$('pdfs').files];if(files.length<2)throw Error('Choose at least two PDF files.');const out=await PDFLib.PDFDocument.create();for(const f of files){const src=await PDFLib.PDFDocument.load(await f.arrayBuffer());const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p))}downloadBlob(new Blob([await out.save()],{type:'application/pdf'}),'merged.pdf');status('mergeStatus','Merged PDF downloaded.')}catch(e){status('mergeStatus','Could not merge. Encrypted PDFs are not supported by this tool. '+(e.message||''))}};
+$('unlockPdf').onclick=()=>{const f=$('lockedPdf').files[0],pw=$('pdfPassword').value;if(!f){status('unlockStatus','Choose a PDF first.');return}if(!pw){status('unlockStatus','Enter the known password first.');return}status('unlockStatus','This browser-only demo cannot reliably remove PDF encryption. For privacy, it does not upload your file. Open the PDF with its password in a trusted PDF app and export/save an unprotected copy if you are authorized.');};
+let stream=null,scanLoop=false;
+async function scanFrame(){if(!scanLoop||$('video').readyState<2)return;const v=$('video'),c=$('qrCanvas'),ctx=c.getContext('2d');c.width=v.videoWidth;c.height=v.videoHeight;ctx.drawImage(v,0,0,c.width,c.height);const d=ctx.getImageData(0,0,c.width,c.height);const code=jsQR(d.data,d.width,d.height);if(code){scanLoop=false;status('qrStatus','QR content: '+code.data);return}requestAnimationFrame(scanFrame)}
+$('startCamera').onclick=async()=>{try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});$('video').srcObject=stream;await $('video').play();scanLoop=true;status('qrStatus','Scanning… point the camera at a QR code.');scanFrame()}catch(e){status('qrStatus','Camera unavailable. Use an image instead, and allow camera permission on HTTPS.')}};
+$('stopCamera').onclick=()=>{scanLoop=false;if(stream)stream.getTracks().forEach(t=>t.stop());$('video').srcObject=null;status('qrStatus','Camera stopped.')};
+$('qrImage').onchange=async()=>{try{const f=$('qrImage').files[0];if(!f)return;const im=await loadImage(f),c=$('qrCanvas'),ctx=c.getContext('2d');c.width=im.naturalWidth;c.height=im.naturalHeight;ctx.drawImage(im,0,0);const d=ctx.getImageData(0,0,c.width,c.height);const code=jsQR(d.data,d.width,d.height);status('qrStatus',code?'QR content: '+code.data:'No QR code found in this image.')}catch(e){status('qrStatus','Could not read image.')}};
+$('printBtn').onclick=()=>{const f=$('printFile').files[0];if(!f){status('printStatus','Choose a PDF or image first.');return}const url=URL.createObjectURL(f),win=window.open('','_blank');if(!win){status('printStatus','Pop-up blocked. Allow pop-ups and try again.');return}const isPdf=f.type==='application/pdf';const size=$('paper').value;win.document.write('<!doctype html><html><head><title>Print</title><style>@page{size:'+size+';margin:8mm}body{margin:0}img,iframe{width:100%;height:96vh;object-fit:contain;border:0}</style></head><body>'+(isPdf?'<iframe src="'+url+'"></iframe>':'<img src="'+url+'">')+'<script>window.onload=()=>setTimeout(()=>window.print(),700)<\/script></body></html>');win.document.close();status('printStatus','Print preview opened. Confirm printer and copies in the device dialog.')};
+</script></body></html>
